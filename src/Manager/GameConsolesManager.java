@@ -16,20 +16,26 @@ public class GameConsolesManager implements iManager<GameConsoles> {
 
     public GameConsolesManager(DataFileManager dataFileManager) {
         this.dataFileManager = dataFileManager;
-        this.readAndWriteConsoles = new ReadAndWriteConsoles();
+        this.readAndWriteConsoles = new ReadAndWriteConsoles(); // Consider passing file paths if needed
         this.list = readAndWriteConsoles.readData(dataFileManager.getConsoleFile()); // Initialize with console file
     }
 
     @Override
     public void add(GameConsoles gameConsoles) {
         this.list.add(gameConsoles);
-        writeDataToFiles(List.of(
-                dataFileManager.getConsoleFile()
-        ));
+        // No automatic writing here; writing should be handled by the calling method
+    }
+
+    public void writeDataToSelectedFiles(List<String> filePaths) {
+        for (String filePath : filePaths) {
+            System.out.println("Writing data to file: " + filePath); // Debugging line
+            readAndWriteConsoles.writeData(list, filePath);
+        }
     }
 
     private void writeDataToFiles(List<String> filePaths) {
         for (String filePath : filePaths) {
+            System.out.println("Writing data to file: " + filePath); // Debugging line
             readAndWriteConsoles.writeData(list, filePath);
         }
     }
@@ -67,10 +73,19 @@ public class GameConsolesManager implements iManager<GameConsoles> {
 
     @Override
     public GameConsoles getByName(String name) {
-        return list.stream()
-                .filter(gc -> gc.getGameName().equalsIgnoreCase(name))
-                .findFirst()
-                .orElse(null);
+        for (GameConsoles gc : list) {
+            System.out.println("Checking game: " + gc.getGameName()); // Debugging line
+            if (gc.getGameName().equalsIgnoreCase(name)) {
+                return gc;
+            }
+        }
+        return null;
+    }
+    public void testInitialization() {
+        System.out.println("List size: " + list.size());
+        for (GameConsoles gc : list) {
+            System.out.println(gc.getGameName());
+        }
     }
 
     @Override

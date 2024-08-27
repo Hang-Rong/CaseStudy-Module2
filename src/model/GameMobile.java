@@ -36,6 +36,6 @@ public class GameMobile {
 
     @Override
     public String toString() {
-        return "ID: " + gameID + ", Name: " + gameName + ", Type: " + liveServiceOrNot + ", Date: " + gameDate + ", Publisher: " + gamePublisher + ", Store: " + gameStore;
+        return "ID: " + gameID + ", Name: " + gameName + ", Live: " + liveServiceOrNot + ", Date: " + gameDate + ", Publisher: " + gamePublisher + ", Store: " + gameStore;
     }
 }

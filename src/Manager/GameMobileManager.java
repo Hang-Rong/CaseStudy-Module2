@@ -23,20 +23,24 @@ public class GameMobileManager implements iManager<GameMobile> {
     @Override
     public void add(GameMobile gameMobile) {
         this.list.add(gameMobile);
-        writeDataToFiles(List.of(
-                dataFileManager.getMobileFile()
-        ));
+    }
+    public void writeDataToSelectedFiles(List<String> filePaths) {
+        for (String filePath : filePaths) {
+            System.out.println("Writing data to file: " + filePath); // Debugging line
+            readAndWriteMobile.writeData(list, filePath);
+        }
     }
 
     private void writeDataToFiles(List<String> filePaths) {
         for (String filePath : filePaths) {
+            System.out.println("Writing data to file: " + filePath); // Debugging line
             readAndWriteMobile.writeData(list, filePath);
         }
     }
 
     @Override
     public void removeById(int id, GameMobile gameMobile) {
-        list.removeIf(gc -> gc.getGameID() == id);
+        list.removeIf(gm -> gm.getGameID() == id);
         writeDataToFiles(List.of(
                 dataFileManager.getMobileFile()
         ));
@@ -57,9 +61,9 @@ public class GameMobileManager implements iManager<GameMobile> {
 
     @Override
     public GameMobile getById(int id) {
-        for (GameMobile gc : list) {
-            if (gc.getGameID() == id) {
-                return gc;
+        for (GameMobile gm : list) {
+            if (gm.getGameID() == id) {
+                return gm;
             }
         }
         return null;
@@ -68,7 +72,7 @@ public class GameMobileManager implements iManager<GameMobile> {
     @Override
     public GameMobile getByName(String name) {
         return list.stream()
-                .filter(gc -> gc.getGameName().equalsIgnoreCase(name))
+                .filter(gm -> gm.getGameName().equalsIgnoreCase(name))
                 .findFirst()
                 .orElse(null);
     }

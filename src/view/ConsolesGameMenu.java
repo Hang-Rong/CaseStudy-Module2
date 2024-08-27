@@ -31,18 +31,13 @@ public class ConsolesGameMenu {
             System.out.println("3. Update Game Console");
             System.out.println("4. View All Game Consoles");
             System.out.println("5. View Game Console by Name");
-            System.out.println("6. Find game by Id");
+            System.out.println("6. Find Game by ID");
             System.out.println("7. Sort by Name");
-            System.out.println("8. Back to Home Page");
+            System.out.println("8. Back to Home Page \n");
             System.out.print("Choose an option: ");
 
-            int choice = -1;
-            try {
-                choice = Integer.parseInt(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
-                continue;
-            }
+            int choice = getValidIntegerInput();
+            if (choice == -1) continue; // Invalid input, try again
 
             switch (choice) {
                 case 1:
@@ -65,7 +60,6 @@ public class ConsolesGameMenu {
                     break;
                 case 7:
                     sortByName();
-                    System.out.println("Game consoles sorted by name.");
                     break;
                 case 8:
                     return; // Back to Home Page
@@ -76,22 +70,34 @@ public class ConsolesGameMenu {
         }
     }
 
+    private int getValidIntegerInput() {
+        try {
+            return Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input. Please enter a number.");
+            return -1;
+        }
+    }
+
     private void viewGameConsoleById() {
         int gameID = getValidGameID("Enter Game ID to view: ");
-
         GameConsoles gameConsole = gameConsolesManager.getById(gameID);
         if (gameConsole != null) {
-            System.out.println("Game Console Details:");
-            System.out.println("ID: " + gameConsole.getGameID());
-            System.out.println("Name: " + gameConsole.getGameName());
-            System.out.println("Live Service: " + gameConsole.getLiveServiceOrNot());
-            System.out.println("Date: " + gameConsole.getGameDate());
-            System.out.println("Publisher: " + gameConsole.getGamePublisher());
-            System.out.println("Info: " + gameConsole.getGameInfo());
-            System.out.println("Platform: " + gameConsole.getGamePlatform());
+            displayGameConsoleDetails(gameConsole);
         } else {
             System.out.println("No game console found with ID " + gameID);
         }
+    }
+
+    private void displayGameConsoleDetails(GameConsoles gameConsole) {
+        System.out.println("Game Console Details:");
+        System.out.println("ID: " + gameConsole.getGameID());
+        System.out.println("Name: " + gameConsole.getGameName());
+        System.out.println("Live Service: " + gameConsole.getLiveServiceOrNot());
+        System.out.println("Date: " + gameConsole.getGameDate());
+        System.out.println("Publisher: " + gameConsole.getGamePublisher());
+        System.out.println("Info: " + gameConsole.getGameInfo());
+        System.out.println("Platform: " + gameConsole.getGamePlatform());
     }
 
     private void displayItemsInChunks() {
@@ -109,14 +115,9 @@ public class ConsolesGameMenu {
                 break;
             }
 
-            System.out.println("Displaying items " + (start + 1) + " to " + end + " of " + totalItems + ":");
-            for (int i = start; i < end; i++) {
-                System.out.println(allGameConsoles.get(i));
-            }
+            displayGameConsoles(allGameConsoles.subList(start, end));
 
-            System.out.print("Enter 'n' for next page, 'p' for previous page, or 'q' to quit: ");
-            String input = scanner.nextLine().trim().toLowerCase();
-
+            String input = getPagingInput();
             if (input.equals("n")) {
                 if (end < totalItems) {
                     pageNumber++;
@@ -137,14 +138,27 @@ public class ConsolesGameMenu {
         }
     }
 
+    private void displayGameConsoles(List<GameConsoles> gameConsoles) {
+        System.out.println("Displaying items:");
+        for (GameConsoles gameConsole : gameConsoles) {
+            System.out.println(gameConsole);
+        }
+    }
+
+    private String getPagingInput() {
+        System.out.print("Enter 'n' for next page, 'p' for previous page, or 'q' to quit: ");
+        return scanner.nextLine().trim().toLowerCase();
+    }
+
     private void sortByName() {
         gameConsolesManager.sortByName();
-        viewAllGameConsoles(); // Optionally, display sorted list immediately
+        System.out.println("Game consoles sorted by name.");
+        viewAllGameConsoles(); // Display sorted list
     }
 
     private void addGameConsole() {
-        try{
         int gameID = getValidGameID("Enter Game ID: ");
+        if (gameID == -1) return;
 
         System.out.print("Enter Game Name: ");
         String gameName = scanner.nextLine();
@@ -164,33 +178,37 @@ public class ConsolesGameMenu {
         System.out.print("Enter Device: ");
         String gamePlatform = scanner.nextLine();
 
-        // Create new GameConsoles object
         GameConsoles newGameConsole = new GameConsoles(gameID, gameName, liveServiceOrNot, gameDate, gamePublisher, gameInfo, gamePlatform);
-        // Add the game console
         gameConsolesManager.add(newGameConsole);
+
         System.out.println("Game console added successfully.");
         displayWriteMenu();
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid Game ID format. Please enter a valid number.");
-            return;
-        }
     }
+
     private void displayWriteMenu() {
-        System.out.println("\n--- Is this game cross-platform? Choose one or more options: ---");
+        System.out.println("\n--- Is this game cross-platform?: ---");
         System.out.println("1. Consoles Only");
         System.out.println("2. and PCs");
         System.out.println("3. and Mobile");
-        System.out.println("4. and PCs and Mobile");
+        System.out.println("4. and PCs and Mobile \n");
 
-        System.out.print("Choose an option: ");
-        int choice;
-        try {
-            choice = Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input. Please enter a number.");
+        int choice = getValidIntegerInput();
+        if (choice == -1) return; // Invalid input, try again
+
+        // Determine which files to write based on user choice
+        List<String> filesToWrite = determineFilesToWrite(choice);
+        if (filesToWrite.isEmpty()) {
+            System.out.println("Invalid choice. No files will be written.");
             return;
         }
 
+        // Write data to the selected files
+        gameConsolesManager.writeDataToSelectedFiles(filesToWrite);
+
+        System.out.println("Data written to the selected file(s).");
+    }
+
+    private List<String> determineFilesToWrite(int choice) {
         List<String> filesToWrite = new ArrayList<>();
         switch (choice) {
             case 1:
@@ -198,31 +216,26 @@ public class ConsolesGameMenu {
                 break;
             case 2:
                 filesToWrite.add(dataFileManager.getPcFile());
+                filesToWrite.add(dataFileManager.getConsoleFile());
                 break;
             case 3:
                 filesToWrite.add(dataFileManager.getMobileFile());
+                filesToWrite.add(dataFileManager.getConsoleFile());
                 break;
             case 4:
                 filesToWrite.add(dataFileManager.getPcFile());
                 filesToWrite.add(dataFileManager.getMobileFile());
+                filesToWrite.add(dataFileManager.getConsoleFile());
                 break;
             default:
-                System.out.println("Invalid choice. No files will be written.");
-                return;
+                break;
         }
-
-        // Write data to selected files
-        List<GameConsoles> allGameConsoles = gameConsolesManager.getAll();
-        for (String filePath : filesToWrite) {
-            readAndWriteConsoles.writeData(allGameConsoles, filePath);
-            System.out.println("Data written to: " + filePath);
-        }
-        System.out.println("Game console added successfully.");
+        return filesToWrite;
     }
-
 
     private void removeGameConsole() {
         int gameID = getValidGameID("Enter Game ID: ");
+        if (gameID == -1) return;
 
         GameConsoles gameConsole = gameConsolesManager.getById(gameID);
         if (gameConsole != null) {
@@ -235,28 +248,42 @@ public class ConsolesGameMenu {
 
     private void updateGameConsole() {
         int gameID = getValidGameID("Enter Game ID to update: ");
+        if (gameID == -1) return;
 
         GameConsoles existingGameConsole = gameConsolesManager.getById(gameID);
 
         if (existingGameConsole != null) {
-            System.out.print("Enter new Game Name: ");
-            String gameName = scanner.nextLine();
-            System.out.print("Enter new Live Service (Yes/No): ");
-            String liveServiceOrNot = scanner.nextLine();
-            System.out.print("Enter new Game Date: ");
-            String gameDate = scanner.nextLine();
-            System.out.print("Enter new Game Publisher: ");
-            String gamePublisher = scanner.nextLine();
-            System.out.print("Enter new Game Info: ");
-            String gameInfo = scanner.nextLine();
-            System.out.print("Enter new Game Platform: ");
-            String gamePlatform = scanner.nextLine();
-
-            GameConsoles updatedGameConsole = new GameConsoles(gameID, gameName, liveServiceOrNot, gameDate, gamePublisher, gameInfo, gamePlatform);
-            gameConsolesManager.update(gameID, updatedGameConsole);
+            updateGameConsoleDetails(existingGameConsole);
+            gameConsolesManager.update(gameID, existingGameConsole);
             System.out.println("Game console updated successfully.");
         } else {
             System.out.println("Game console not found.");
+        }
+    }
+
+    private void updateGameConsoleDetails(GameConsoles gameConsole) {
+        System.out.print("Enter new Game Name (or ~ to keep current): ");
+        updateField(scanner.nextLine(), gameConsole::setGameName, gameConsole.getGameName());
+
+        System.out.print("Enter new Live Service (Yes/No) (or ~ to keep current): ");
+        updateField(scanner.nextLine(), gameConsole::setLiveServiceOrNot, gameConsole.getLiveServiceOrNot());
+
+        System.out.print("Enter new Game Date (or ~ to keep current): ");
+        updateField(scanner.nextLine(), gameConsole::setGameDate, gameConsole.getGameDate());
+
+        System.out.print("Enter new Game Publisher (or ~ to keep current): ");
+        updateField(scanner.nextLine(), gameConsole::setGamePublisher, gameConsole.getGamePublisher());
+
+        System.out.print("Enter new Game Info (or ~ to keep current): ");
+        updateField(scanner.nextLine(), gameConsole::setGameInfo, gameConsole.getGameInfo());
+
+        System.out.print("Enter new Game Platform (or ~ to keep current): ");
+        updateField(scanner.nextLine(), gameConsole::setGamePlatform, gameConsole.getGamePlatform());
+    }
+
+    private void updateField(String newValue, java.util.function.Consumer<String> updateMethod, String currentValue) {
+        if (!newValue.equals("~")) {
+            updateMethod.accept(newValue);
         }
     }
 
@@ -265,9 +292,7 @@ public class ConsolesGameMenu {
         if (allGameConsoles.isEmpty()) {
             System.out.println("No game consoles found.");
         } else {
-            for (GameConsoles gameConsole : allGameConsoles) {
-                System.out.println(gameConsole);
-            }
+            displayGameConsoles(allGameConsoles);
         }
     }
 
@@ -276,13 +301,12 @@ public class ConsolesGameMenu {
         String gameName = scanner.nextLine();
         GameConsoles gameConsole = gameConsolesManager.getByName(gameName);
         if (gameConsole != null) {
-            System.out.println(gameConsole);
+            displayGameConsoleDetails(gameConsole);
         } else {
             System.out.println("Game console not found.");
         }
     }
 
-    // Helper method to get a valid Game ID from user input
     private int getValidGameID(String prompt) {
         int gameID = -1;
         while (true) {

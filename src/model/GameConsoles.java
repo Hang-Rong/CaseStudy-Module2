@@ -37,6 +37,6 @@ public class GameConsoles {
 
     @Override
     public String toString() {
-        return "ID: " + gameID + ", Name: " + gameName + ", Type: " + liveServiceOrNot + ", Date: " + gameDate + ", Publisher: " + gamePublisher + ", Platform: " + gamePlatform;
+        return "ID: " + gameID + ", Name: " + gameName + ", Live: " + liveServiceOrNot + ", Date: " + gameDate + ", Publisher: " + gamePublisher + ", Platform: " + gamePlatform;
     }
 }

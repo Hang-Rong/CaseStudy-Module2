@@ -1,5 +1,6 @@
 package saveData;
 
+import model.GameMobile;
 import model.GamePCs;
 
 import java.io.*;
@@ -7,19 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReadAndWritePC {
+
+    private static final String HEADER = "GameID,GameName,LiveService,GameDate,GamePublisher,GameInfo,GameStore";
     // Write data to the specified CSV file
     public void writeData(List<GamePCs> list, String filePath) {
         System.out.println("Writing data to: " + filePath); // Debugging line
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            for (GamePCs gc : list) {
-                String line = escapeCSV(String.valueOf(gc.getGameID())) + "," +
-                        escapeCSV(gc.getGameName()) + "," +
-                        escapeCSV(gc.getLiveServiceOrNot()) + "," +
-                        escapeCSV(gc.getGameDate()) + "," +
-                        escapeCSV(gc.getGamePublisher()) + "," +
-                        escapeCSV(gc.getGameInfo()) + "," +
-                        escapeCSV(gc.getGameStore());
+            writer.write(HEADER); // Write header
+            writer.newLine();
+
+            for (GamePCs gp : list) {
+                // Directly join fields with commas without escaping
+                String line = String.join(",",
+                        String.valueOf(gp.getGameID()),
+                        gp.getGameName(),
+                        gp.getLiveServiceOrNot(),
+                        gp.getGameDate(),
+                        gp.getGamePublisher(),
+                        gp.getGameInfo(),
+                        gp.getGameStore());
                 System.out.println("Writing line: " + line); // Debugging line
                 writer.write(line);
                 writer.newLine();
@@ -47,13 +55,16 @@ public class ReadAndWritePC {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            // Skip header if present
-            br.readLine();
+            boolean isHeaderSkipped = false;
 
             while ((line = br.readLine()) != null) {
+                if (!isHeaderSkipped) {
+                    isHeaderSkipped = true; // Skip header
+                    continue;
+                }
                 try {
-                    // Use a CSV parser for robustness
-                    String[] parts = line.split(",");
+                    // Use a simple CSV split
+                    String[] parts = line.split(",", -1);
                     if (parts.length == 7) {
                         int gameID = Integer.parseInt(parts[0].trim());
                         String gameName = parts[1].trim();

@@ -8,19 +8,26 @@ import java.util.List;
 
 public class ReadAndWriteConsoles {
 
+    private static final String HEADER = "GameID,GameName,LiveService,GameDate,GamePublisher,GameInfo,GameDevice";
+
     // Write data to the specified CSV file
     public void writeData(List<GameConsoles> list, String filePath) {
         System.out.println("Writing data to: " + filePath); // Debugging line
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            writer.write(HEADER); // Write header
+            writer.newLine();
+
             for (GameConsoles gc : list) {
-                String line = escapeCSV(String.valueOf(gc.getGameID())) + "," +
-                        escapeCSV(gc.getGameName()) + "," +
-                        escapeCSV(gc.getLiveServiceOrNot()) + "," +
-                        escapeCSV(gc.getGameDate()) + "," +
-                        escapeCSV(gc.getGamePublisher()) + "," +
-                        escapeCSV(gc.getGameInfo()) + "," +
-                        escapeCSV(gc.getGamePlatform());
+                // Directly join fields with commas without escaping
+                String line = String.join(",",
+                        String.valueOf(gc.getGameID()),
+                        gc.getGameName(),
+                        gc.getLiveServiceOrNot(),
+                        gc.getGameDate(),
+                        gc.getGamePublisher(),
+                        gc.getGameInfo(),
+                        gc.getGamePlatform());
                 System.out.println("Writing line: " + line); // Debugging line
                 writer.write(line);
                 writer.newLine();
@@ -35,7 +42,7 @@ public class ReadAndWriteConsoles {
         List<GameConsoles> gameConsolesList = new ArrayList<>();
 
         File file = new File(filePath);
-        // Check if the file exists before reading
+
         if (!file.exists()) {
             System.out.println("File does not exist. Creating file: " + filePath);
             try {
@@ -48,13 +55,16 @@ public class ReadAndWriteConsoles {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            // Skip header if present
-            br.readLine();
+            boolean isHeaderSkipped = false;
 
             while ((line = br.readLine()) != null) {
+                if (!isHeaderSkipped) {
+                    isHeaderSkipped = true; // Skip header
+                    continue;
+                }
                 try {
-                    // Use a CSV parser for robustness
-                    String[] parts = line.split(",");
+                    // Use a simple CSV split
+                    String[] parts = line.split(",", -1);
                     if (parts.length == 7) {
                         int gameID = Integer.parseInt(parts[0].trim());
                         String gameName = parts[1].trim();
@@ -74,15 +84,37 @@ public class ReadAndWriteConsoles {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error reading file: " + e.getMessage());
         }
         return gameConsolesList;
     }
 
+    // Helper method to parse CSV lines with proper handling of commas and quotes
+    private String[] parseCSVLine(String line) {
+        List<String> fields = new ArrayList<>();
+        boolean inQuotes = false;
+        StringBuilder currentField = new StringBuilder();
+
+        for (char c : line.toCharArray()) {
+            if (c == '"') {
+                inQuotes = !inQuotes;
+                currentField.append(c);
+            } else if (c == ',' && !inQuotes) {
+                fields.add(currentField.toString());
+                currentField.setLength(0);
+            } else {
+                currentField.append(c);
+            }
+        }
+        fields.add(currentField.toString()); // Add last field
+
+        return fields.toArray(new String[0]);
+    }
+
     // Helper method to escape CSV values
     private String escapeCSV(String value) {
-        if (value == null) {
-            return "";
+        if (value == null || value.isEmpty()) {
+            return "\"\"";
         }
         String escapedValue = value.replace("\"", "\"\"");
         return "\"" + escapedValue + "\"";

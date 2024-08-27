@@ -1,5 +1,6 @@
 package saveData;
 
+import model.GameConsoles;
 import model.GameMobile;
 
 import java.io.*;
@@ -7,19 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReadAndWriteMobile {
+
+    private static final String HEADER = "GameID,GameName,LiveService,GameDate,GamePublisher,GameInfo,GameStore";
     // Write data to the specified CSV file
     public void writeData(List<GameMobile> list, String filePath) {
         System.out.println("Writing data to: " + filePath); // Debugging line
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            for (GameMobile gc : list) {
-                String line = escapeCSV(String.valueOf(gc.getGameID())) + "," +
-                        escapeCSV(gc.getGameName()) + "," +
-                        escapeCSV(gc.getLiveServiceOrNot()) + "," +
-                        escapeCSV(gc.getGameDate()) + "," +
-                        escapeCSV(gc.getGamePublisher()) + "," +
-                        escapeCSV(gc.getGameInfo()) + "," +
-                        escapeCSV(gc.getGameStore());
+            writer.write(HEADER); // Write header
+            writer.newLine();
+
+            for (GameMobile gm : list) {
+                // Directly join fields with commas without escaping
+                String line = String.join(",",
+                        String.valueOf(gm.getGameID()),
+                        gm.getGameName(),
+                        gm.getLiveServiceOrNot(),
+                        gm.getGameDate(),
+                        gm.getGamePublisher(),
+                        gm.getGameInfo(),
+                        gm.getGameStore());
                 System.out.println("Writing line: " + line); // Debugging line
                 writer.write(line);
                 writer.newLine();
@@ -34,7 +42,7 @@ public class ReadAndWriteMobile {
         List<GameMobile> gameMobileList = new ArrayList<>();
 
         File file = new File(filePath);
-        // Check if the file exists before reading
+
         if (!file.exists()) {
             System.out.println("File does not exist. Creating file: " + filePath);
             try {
@@ -47,13 +55,16 @@ public class ReadAndWriteMobile {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            // Skip header if present
-            br.readLine();
+            boolean isHeaderSkipped = false;
 
             while ((line = br.readLine()) != null) {
+                if (!isHeaderSkipped) {
+                    isHeaderSkipped = true; // Skip header
+                    continue;
+                }
                 try {
-                    // Use a CSV parser for robustness
-                    String[] parts = line.split(",");
+                    // Use a simple CSV split
+                    String[] parts = line.split(",", -1);
                     if (parts.length == 7) {
                         int gameID = Integer.parseInt(parts[0].trim());
                         String gameName = parts[1].trim();

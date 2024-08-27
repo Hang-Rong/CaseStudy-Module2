@@ -23,20 +23,24 @@ public class GamePCsManager implements iManager<GamePCs> {
     @Override
     public void add(GamePCs gamePCs) {
         this.list.add(gamePCs);
-        writeDataToFiles(List.of(
-                dataFileManager.getPcFile()
-        ));
+    }
+    public void writeDataToSelectedFiles(List<String> filePaths) {
+        for (String filePath : filePaths) {
+            System.out.println("Writing data to file: " + filePath); // Debugging line
+            readAndWritePC.writeData(list, filePath);
+        }
     }
 
     private void writeDataToFiles(List<String> filePaths) {
         for (String filePath : filePaths) {
+            System.out.println("Writing data to file: " + filePath); // Debugging line
             readAndWritePC.writeData(list, filePath);
         }
     }
 
     @Override
     public void removeById(int id, GamePCs gamePCs) {
-        list.removeIf(gc -> gc.getGameID() == id);
+        list.removeIf(gp -> gp.getGameID() == id);
         writeDataToFiles(List.of(
                 dataFileManager.getPcFile()
         ));
@@ -57,9 +61,9 @@ public class GamePCsManager implements iManager<GamePCs> {
 
     @Override
     public GamePCs getById(int id) {
-        for (GamePCs gc : list) {
-            if (gc.getGameID() == id) {
-                return gc;
+        for (GamePCs gp : list) {
+            if (gp.getGameID() == id) {
+                return gp;
             }
         }
         return null;
@@ -68,7 +72,7 @@ public class GamePCsManager implements iManager<GamePCs> {
     @Override
     public GamePCs getByName(String name) {
         return list.stream()
-                .filter(gc -> gc.getGameName().equalsIgnoreCase(name))
+                .filter(gp -> gp.getGameName().equalsIgnoreCase(name))
                 .findFirst()
                 .orElse(null);
     }
